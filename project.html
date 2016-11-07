@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>project</title>
+	<link rel="stylesheet" type="text/css" href="css/app.css">
+</head>
+<body>
+	<div class="container" id="Threshold-App">
+		<div class="table_header">
+			<ul>
+				<li class="from cell">From</li>
+				<li class="until cell">Until</li>
+				<li class="comparsion cell">Comparsion</li>
+				<li class="alerts cell">Alerts</li>
+				<li class="cell"></li>
+			</ul>
+		</div>
+		<div class="row_add cell" id="newThreshold">
+			<span>add a new threshold(+)</span>
+		</div>
+		<div class="table_body" id="table_body">
+			
+			
+		</div>
+
+		 <footer>
+	      <div id="Threshold-count"></div>
+	    </footer>
+	</div>
+
+	<!-- Templates -->
+ 	<script type="text/template" id="item-template">
+ 		<ul class="view editing">
+			<li class="TimeValue">
+				<select class="allTime start">
+					<option><%= fromTime %></option>
+					<% for (var i = 0; i < 24; i++){%>
+						<% for(var j = 0; j <=45 ; j = j + 15){%>
+								<% if(i < 10 && j !== 0){ %>
+									<option value= <%= '0' + i + ":" + j %> > <%= '0' + i + ":" + j %> </option>
+								<% }; %>
+								<% if(i > 10 && j !== 0){ %>
+									<option value= <%=  i + ":" + j %> > <%= i + ":" + j %> </option>
+								<% }; %>
+								<% if(i < 10 && j == 0){ %>
+									<option value= <%= '0' + i + ":" + j + "0" %> > <%= '0' + i + ":" + j + "0"%> </option>
+								<% }; %>
+								<% if(i > 10 && j == 0){ %>
+									<option value= <%=  i + ":" + j  + "0"%> > <%= i + ":" + j  + "0" %> </option>
+								<% }; %>
+							<% };%>
+					<% }; %>
+				</select>
+				<select class="endTime hidden">
+					<option><%= endTime %></option>
+					<% for (var i = 0; i < 24; i++){%>
+						<% for(var j = 0; j <=45 ; j = j + 15){%>
+								<% if(i < 10 && j !== 0){ %>
+									<option value= <%= '0' + i + ":" + j %> > <%= '0' + i + ":" + j %> </option>
+								<% }; %>
+								<% if(i > 10 && j !== 0){ %>
+									<option value= <%=  i + ":" + j %> > <%= i + ":" + j %> </option>
+								<% }; %>
+								<% if(i < 10 && j == 0){ %>
+									<option value= <%= '0' + i + ":" + j + "0" %> > <%= '0' + i + ":" + j + "0"%> </option>
+								<% }; %>
+								<% if(i > 10 && j == 0){ %>
+									<option value= <%=  i + ":" + j  + "0"%> > <%= i + ":" + j  + "0" %> </option>
+								<% }; %>
+							<% };%>
+					<% }; %>
+				</select>
+			</li>
+			<li class="errorValue cell">
+				<span class="pray">when the <span class="strong">ErrorSystem</span></span>
+				<select class="valueStatus">
+					<option value="value">value</option>
+					<option value="delta">delta</option>
+					<option value="absolute value">absolute value</option>
+					<option value="absolute delta">absolute delta</option>
+					<option value="NaNdelta">NaNdelta</option>
+					<option value="absolute NaNdelta">absolute NaNdelta</option>
+				</select>
+			</li>
+			<li class="compareValue cell">
+				<select class="compare">
+					<option value="=">is equal to (=)</option>
+					<option value=">">is greater than (>)</option>
+					<option value="<">is less than (<)</option>
+				</select>
+			</li>
+			<li class="alertValue cell">
+				<div class="warnbar">
+					<input type="text" class="warnthres" value=<%= warnValue %>><span class="warning white">trigger a warning</span>
+				</div>
+				<div class="errorbar">
+					<input type="text" class="errorthres" value=<%= errorValue %>><span class="error white">trigger a error</span>
+				</div>
+				<div class="criticalbar">
+					<input type="text" class="criticalthres" value=<%= criticalValue %>><span class="critical white">trigger a critical</span>
+				</div>
+			</li>
+			<li class="cell">
+				<button class="delete">delete</button>
+				<button class="save">save</button>
+			</li>
+		</ul>
+	</script>
+	<script type="text/template" id="stats-template">
+		<ul class="timebar">
+			<% for (var i = 2; i <= 24; i = i + 2){%>
+				<li value= <%= i + ":00" %> class = "time"><%= i + ": 00" %></li>
+			<% }; %>
+			<ul class="colorbar">
+				<% for (var i = 0; i < 24; i++){%>
+					<% for(var j = 0; j <= 45 ; j = j + 15){%>
+						<% if(i !== 0 || j !== 0){ %>
+							<li value= <%= i + ":" + j%> class = "color"></li>
+						<% };%>
+					<% };%>
+				<% }; %>
+			</ul>
+		</ul>
+    </script>
+</body>
+	<script type="text/javascript" src='javascripts/jquery.js'></script>
+    <script type="text/javascript" src='javascripts/underscore.js'></script>
+    <script type="text/javascript" src='javascripts/backbone.js'></script>
+    <script type="text/javascript" src="javascripts/backbone.localStorage.js"></script>
+	<script type="text/javascript" src="./javascripts/app.js"></script>
+	<script type="text/javascript">
+		var threshold = new newThreshold({
+			add:'#newThreshold',
+			body:'#table_body',
+			timebar:'#Threshold-count'
+		})
+	</script>
+</html>
+<!-- 使用说明
+要使用这个组件，你首先的复制这两段模板到你的HTML文件的body中。然后引入这个组件的JS与CSS
+接下来你需要创建一个这个组件的实例。你可以定义组件添加条所在的位置，组件主体所在的位置和组件时间栏所在的位置。
+就像这样：var threshold = new newThreshold({
+			add:'#newThreshold',//param:string,such as '#xxx','.xxx','div'
+			body:'#table_body',//param:string,such as '#xxx','.xxx','div'
+			timebar:'#Threshold-count'//param:string,such as '#xxx','.xxx','div'
+		})
+然后就可以愉悦的使用啦。 -->
