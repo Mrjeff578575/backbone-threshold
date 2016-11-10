@@ -2,23 +2,11 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>project</title>
 	<link rel="stylesheet" type="text/css" href="css/app.css">
 	<link rel="stylesheet" type="text/css" href="font-awesome-4.6.3/css/font-awesome.min.css">
+	<title></title>
 </head>
 <body>
-	<div class="container" id="Threshold-App">
-		<div class="table_body" id="table_body">
-			
-			
-		</div>
-
-		 <footer>
-	      <div id="Threshold-count"></div>
-	    </footer>
-	</div>
-
-	<!-- Templates -->
  	<script type="text/template" id="item-template">
  		<ul class="view editing">
 			<li class="TimeValue">
@@ -129,17 +117,21 @@
 			</ul>
 		</ul>
     </script>
+    <div id="app">
+	    <div id="threshold_body"></div>
+	   	<div id="threshold_bar"></div>
+    </div>
 </body>
 	<script type="text/javascript" src='javascripts/jquery.js'></script>
     <script type="text/javascript" src='javascripts/underscore.js'></script>
     <script type="text/javascript" src='javascripts/backbone.js'></script>
     <script type="text/javascript" src="javascripts/backbone.localStorage.js"></script>
 	<script type="text/javascript" src="./javascripts/app.js"></script>
-	<script type="text/javascript">
+  	<script type="text/javascript">
 		var threshold = new newThreshold({
-			maincontainer:'#Threshold-App',
-			body:'#table_body',
-			timebar:'#Threshold-count'
+			maincontainer:'#app',
+			body:'#threshold_body',
+			timebar:'#threshold_bar'
 		})
 	</script>
 </html>

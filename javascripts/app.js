@@ -1,25 +1,29 @@
 var newThreshold = function(options){
 	option = {
+		maincontainer: options.maincontainer || '#app',
 		add: options.add  || '#newThreshold',
 		body:options.body || '#table_body',
 		timebar:options.timebar || 'footer'
 	};
 	var colorArray = ['purple', 'lightblue', 'green', 'blue', 'magenta', 'brightgreen'];
 	var buffer = [];
-	var flag = 0;
-	var _this;
+	$(options.body).addClass('middle');
+	$(options.maincontainer).addClass('relative');
 	$(document).keydown(function(e){//按下esc退出编辑模式
 		if(e.keyCode == 27){
-			console.log(_this);
-			_this.__proto__.close;
+			$('.view').removeClass('editing');
+			$('select').blur();
+			$('input').blur();
 		}
 	});
 	$(document).mousedown(function(e){//点击body退出编辑模式
 		if(e.target.localName == 'body'){
-			_this.__proto__.close;
+			$('.view').removeClass('editing');
+			$('select').blur();
+			$('input').blur();
 		}
 	})
-	function NumCheck(num){
+	function NumCheck(num){//随机颜色check
 		if(buffer.indexOf(num) == -1){
     		buffer.push(num);
     		return buffer[buffer.indexOf(num)];
@@ -32,7 +36,14 @@ var newThreshold = function(options){
     		return NumCheck(newNum);
     	}
 	};
-	function TimeIndex(time){
+	function ChangeTime(_fromTime, _endTime){
+	    var fromTime = _fromTime.replace(':', '.'); 
+        var endTime = _endTime.replace(':', '.');
+		var endIndex = TimeIndex(endTime);
+		var fromIndex = TimeIndex(fromTime);
+		return [fromIndex, endIndex];
+	}
+	function TimeIndex(time){//计算时间格子
 		var index = 0
 		var _time = 0;
 		while(time >= 1){
@@ -42,7 +53,7 @@ var newThreshold = function(options){
 		_time = Math.floor(time * 100);
 		console.log('_time:'+ _time);
 		if(_time < 100){
-			switch(_time){
+			switch(_time){//进行数据修正
 				case 0:
 					break;
 				case 14:
@@ -62,8 +73,20 @@ var newThreshold = function(options){
 					break;
 			}
 		}
-		console.log('_index:'+ index);
 		return index;
+	};
+	//循环加上颜色，并检测是否会覆盖 参数依次：this值，起始值，结束值
+	function LoopAddColor(that, from, end){
+		for(var i = from ; i < end ; i++){
+        	var _Self = that;
+        	colorArray.map(function(item){ //保证只显示先来的颜色
+        		if($('.color').eq(i).hasClass('expand')) return
+        		else{
+        			$('.color').eq(i).addClass(_Self.get('color'));
+        			$('.color').eq(i).addClass('expand');
+        		}
+        	})
+        }
 	};
 	var Threshold = Backbone.Model.extend({
     	// 设置默认的属性
@@ -123,6 +146,7 @@ var newThreshold = function(options){
 	    // 为每一个任务条目绑定事件
 	    events: {
 	    	"dblclick .view"     : "edit",
+	    	"focus .allTime"     : "editing",
 	    	"focus .fromTime"	 : "editing",
 	    	"focus .endTime"	 : "editing",
 	    	"focus .valueStatus" : "editing",
@@ -168,17 +192,8 @@ var newThreshold = function(options){
 	    		this.$('.endTime').removeClass('hidden');
 	    		this.$('.start')[0].value = value;
 	    	}
-	    	_this = this;
 	        return this;
 	    },
-	    // sortRender: function() {
-	    // 	var _this = this;
-	    // 	Thresholds.models.map(function(item){
-	    // 		_this.$el.html(_this.template(item.toJSON()));
-	    // 		this.$('.view').addClass(item.attributes.color);
-	    // 	});
-	    // 	// this.$el.html(this.template(this.model.toJSON()));
-	    // },
 	    editFromTime: function(){
 	    	if(this.$('.allTime').val() !== undefined){
 	    		var value = this.$('.allTime').val();
@@ -194,12 +209,6 @@ var newThreshold = function(options){
 	    		this.$('.allTime').removeClass('allTime');
 	    		this.$('.endTime').removeClass('hidden');
 	    		this.$('.start')[0].value = value;
-	    	}
-	    	else if(flag !== 1 && value == 'Any Time'){
-	    		flag = 1;
-	    	}
-	    	else if(flag == 1 && value == 'Any Time'){
-	    		alert('Any Time is Only');
 	    	}
 	    },
 	    editEndTime: function(){
@@ -228,15 +237,17 @@ var newThreshold = function(options){
 	    },
 	    // 修改任务条目的样式
 	    edit: function() {
+	    	$('.view').removeClass('active');
 	    	this.$('.view').addClass("editing");
-	        // this.$('.errorbar').removeClass('hidden');
-	        // this.$('.criticalbar').removeClass('hidden');
+	    	this.$('.view').addClass("active");
 	       	this.$('.errorbar').slideDown('slow');
 	        this.$('.criticalbar').slideDown('slow');
 	        this.$('.start').focus();
 	    },
 	    editing: function() {
+	    	$('.view').removeClass('active');
 	    	this.$('.view').addClass("editing");
+	    	this.$('.view').addClass("active");
 	    	this.$('.warnbar').slideDown('slow');
 	        this.$('.errorbar').slideDown('slow');
 	        this.$('.criticalbar').slideDown('slow');
@@ -246,6 +257,10 @@ var newThreshold = function(options){
 	    	var warnValue = this.$('.warnthres').val();
 	    	var errorvalue = this.$('.errorthres').val();
 	    	var criticalvalue = this.$('.criticalthres').val();
+	    	if($('.allTime').length > 1){ //警告any Time只能有一个
+	    		alert('Any Time only one');
+	    		return
+	    	}
 	    	//判断是否隐藏error和critical
 	    	// errorvalue == "" ? this.$('.errorbar').addClass('hidden') : this.$('.errorbar').removeClass('hidden');
 	    	// criticalvalue == "" ? this.$('.criticalbar').addClass('hidden') : this.$('.criticalbar').removeClass('hidden');
@@ -260,29 +275,18 @@ var newThreshold = function(options){
 	    		// this.$('.warnbar').removeClass('hidden');
 	    	}
 	        this.$('.view').removeClass("editing");
-	        if(Thresholds.models.length >= colorArray.length){
-
-	        }
-	        else{
+	        this.$('.view').removeClass("active");
+	        //当前Model数量小于颜色数组数量，当前首先移除expand和color
+	        if(Thresholds.models.length <= colorArray.length){
+	        	$('.color').siblings("."+this.model.get('color')).removeClass('expand');
 	        	$('.color').removeClass(this.model.attributes.color);
 	        }
 	        //改变colorbar中的颜色显示,首先移除当前颜色，保证修改时颜色条变化。
 	        if(this.model.attributes.fromTime !== 'Any Time'){
-	        	var fromTime = this.model.attributes.fromTime.replace(':', '.'); 
-		        var endTime = this.model.attributes.endTime.replace(':', '.');
-				var endIndex = TimeIndex(endTime);//4+4+2
-				var fromIndex = TimeIndex(fromTime);//4
-				console.log('fromIndex：'+fromIndex,'endIndex：'+endIndex);
-				var index = endIndex - fromIndex;
-				if(index < 0){
-					endIndex = endIndex + 96;
-				}
-		        for(var i = fromIndex ; i < endIndex ; i++){
-		        	$('.color').eq(i).addClass(this.model.attributes.color);
-		        }
+	        	AddColor(this.model);
 	        }
 	        else{
-	        	$('.color').addClass(this.model.attributes.color);
+	        	LoopAddColor(this.model, 0, 96);
 	        }
 	        //输出编辑后的字符串
 	        var _self = this.model.attributes;
@@ -290,22 +294,58 @@ var newThreshold = function(options){
 	        	console.log('('+_self.fromTime+" "+ _self.endTime+')'+" " + _self.compareValue +" "+ _self.warnValue+" "+  _self.errorValue +" "+ _self.criticalValue);
 	        }
 	        else{
-	        	console.log("("+_selfromTime+")"+" "+ _self.compareValue +" "+ _self.warnValue+" "+  _self.errorValue +" "+ _self.criticalValue);
+	        	console.log("()"+" "+ _self.compareValue +" "+ _self.warnValue+" "+  _self.errorValue +" "+ _self.criticalValue);
 	        }
-	        //排序
-	        Thresholds.comparator;//model顺序已经改变
 	    },
 	    // 移除对应条目，以及对应的数据对象
 	    clear: function() {
 	        this.model.destroy();
+	        console.log($('.color').find(this.model.get('color')));
+	       	$('.color').siblings("."+this.model.get('color')).removeClass('expand');//expand没有移除导致bug
 	        $('.color').removeClass(this.model.attributes.color);
+	        if(Thresholds.length == 0){
+	        	$('.color').removeClass('expand');
+	        }
+	        else{//删除完AnyTime后，所有颜色被移除，需要改变成再次给颜色条赋值
+	        	Thresholds.models.map(function(item){
+	        		AddColor(item);
+	        	})
+	        }
 	    }
 	});
+	function AddColor(item){//model
+		var _this = item;
+		console.log(_this);
+		var timeArray = ChangeTime(_this.get('fromTime'), _this.get('endTime'));
+		var fromIndex = timeArray[0];
+		var endIndex = timeArray[1];
+		var index = endIndex - fromIndex;
+		if(index == 0){
+			LoopAddColor(_this, 0, 96);
+			_this.$('.fromTime').addClass('allTime');
+			_this.$('.fromTime').removeClass('fromTime');
+			console.log($('.allTime'));
+			$('.allTime')[0].value = 'Any Time';
+			_this.$('.endTime').addClass('hidden');
+			_this.model.attributes.fromTime == 'Any Time';
+			return
+		}
+		console.log('fromIndex：'+fromIndex,'endIndex：'+endIndex);
+		if(index < 0){//判断是否跨天
+			var firstDayIndex = 96 - fromIndex;//eg:23:00 - 1:30 4
+			var secondDayIndex = endIndex;
+			LoopAddColor(_this, fromIndex, 97);
+	        LoopAddColor(_this, 0, secondDayIndex);
+		}
+		else{
+			LoopAddColor(_this, fromIndex, endIndex);
+		}
+	}
 	//以及任务的添加。主要是整体上的一个控制
 	var AppView = Backbone.View.extend({
 
 	    //绑定页面上主要的DOM节点
-	    el: $("#Threshold-App"),
+	    el: $(option.maincontainer),
 
 	    // 在底部显示的统计数据模板
 	    statsTemplate: _.template($('#stats-template').html()),
@@ -315,17 +355,17 @@ var newThreshold = function(options){
 	        "click #newThreshold":  "createThreshold",
 	    },
 
-	    //在初始化过程中，绑定事件到Todos上，
+	    //在初始化过程中，绑定事件到Thresholds上，
 	    //当任务列表改变时会触发对应的事件。
 	    //最后从localStorage中fetch数据到Thresholds中。
 	    initialize: function() {
 	        this.input = this.$(".allTime");
 	        this.listenTo(Thresholds, 'add', this.addOne);
 	        this.listenTo(Thresholds, 'reset', this.addAll);
-	        // this.listenTo(Thresholds, 'all', this.render);
-	        this.footer = this.$(option.timebar);
+	        this.listenTo(Thresholds, 'all', this.render);
+	        this.listenTo(Thresholds, 'change:sortTime', this.resort);
+	        this.footer = $(option.timebar);
 	       	this.footer.html(this.statsTemplate());
-	        this.footer.show();
 			Thresholds.fetch({  
 			    success: function(collection, resp) {  
 			        // 同步成功后在控制台输出集合中的模型列表  
@@ -336,13 +376,22 @@ var newThreshold = function(options){
 
 	    // 更改当前任务列表的状态
 	    render: function() {
-
+	    	var length = Thresholds.length;
+	    	if(length){
+	    		$('.timebar').show();
+	    	}
+	    	else{
+	    		$('.timebar').hide();
+	    	}
+	    },
+	    resort: function(that) {
+	    	//排序
+	        Thresholds.comparator;//model顺序已经改变，怎么渲染到视图上
 	    },
 	    // 添加一个任务
 	    addOne: function(Threshold) {
 	        var view = new ThresholdView({model: Threshold});
-	        this.$(option.body).append(view.render().el);
-        	this.footer.show();
+	        $(option.body).append(view.render().el);
 	    },
 
 	    // 把Thresholds中的所有数据渲染到页面,页面加载的时候用到

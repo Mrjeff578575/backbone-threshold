@@ -35,7 +35,7 @@ body,html{
 	width: 1200px;
 	height: 20px;
 }
-.container li{
+li{
 	display: inline-block;
 }
 .cell{
@@ -52,18 +52,37 @@ body,html{
 	text-align: center;
 	vertical-align: top;
 }
+.delete{
+	background: #D766F9;
+	color: #ffffff;
+	border: 0;
+	width: 20px;
+	text-align: center;
+	font-size: 25px;
+	cursor: pointer;
+	border-radius: 3px;
+}
+.bar{
+	width: 240px;
+}
+.btn{
+	vertical-align: top;
+}
 select{
 	border: none;
 	border-bottom: 1px dashed #c1c1c1;
 }
 .allTime{
-	width: 130px;
+	width: 146px;
 }
 select:focus{
 	background: #ffffff;
 }
 .fromTime, .from{
 	width: 70px;
+}
+.fromTime, .allTime{
+	border-right: 1px dashed #c1c1c1;
 }
 .endTime, .until{
 	width: 70px;
@@ -80,7 +99,7 @@ select:focus{
 	text-align: center;
 }
 .alerts, .alertValue{
-	width: 200px;
+	width: 220px;
 	border-left: 1px dashed #c1c1c1;
 }
 .row_add{
@@ -91,11 +110,19 @@ select:focus{
 .table_body{
 	width: 990px;
 }
+.fa{
+	float: right;
+	vertical-align: middle;
+}
 .white{
+	display: inline-block;
 	color: #ffffff;
 	font-size: 14px;
 	padding:2px 0;
 	line-height: 18px;
+	border-radius: 2px;
+	width: 140px;
+	margin: 2px 0;
 }
 .pray{
 	color: #c1c1c1;
@@ -124,13 +151,29 @@ select:focus{
 	border-left: 5px solid #32fefe;
 }
 .editing, .editing select, .editing input{
-	background: #daeff6;
+	background: #efefef;
 }
-.editing{
-	border-bottom: 1px solid #daeff6;
-	border-top: 1px solid #daeff6;
+.active{
+	border-bottom: 1px solid #8CE0FC;
+	border-top: 1px solid #8CE0FC;
+	background: #C6EEFB;
+}
+.active select, .active input{
+	background: #C6EEFB;
 }
 .save{
+	width: 40px;
+	margin-left: 10px;
+	text-align: center;
+	background: #D766F9;
+	border: none;
+	height: 25px;
+	position: relative;
+	bottom: 7px;
+	color: #ffffff;
+	font-size: 16px;
+	line-height: 25px;
+	border-radius: 3px;
 	display: none;
 }
 .editing .save{
@@ -150,8 +193,9 @@ select:focus{
 }
 .timebar{
 	font-size: 0;
-	margin-top: 20px;
 	position: relative;
+	top: 50px;
+	left: 15px;
 }
 .time{
 	display: inline-block;
@@ -195,4 +239,21 @@ select:focus{
 }
 .color.brightgreen{
 	background: #10b50c;
+}
+.expand{
+	height: 40px;
+	position: relative;
+	top: 10px;
+}
+.relative{
+	position: relative;
+	margin-left: 10px;
+}
+.header{
+	position: absolute;
+	top: 10px;
+}
+.middle{
+	position: relative;
+	top: 50px;
 }
