@@ -6,7 +6,7 @@ ul{
 	list-style: none;
 }
 body * {
-    font-family: 'MuseoSans300';
+    font-family: "Microsoft YaHei","Arial","黑体","宋体",sans-serif;
     font-weight: normal;
     font-size: 14px;
 }
@@ -41,10 +41,8 @@ li{
 .cell{
 	line-height: 20px;
 	text-align: left;
-    font-family: 'MuseoSans500';
     font-weight: normal;
     color: #333;
-	min-height: 20px;
 }
 .TimeValue{
 	min-height: 20px;
@@ -53,7 +51,7 @@ li{
 	vertical-align: top;
 }
 .delete{
-	background: #D766F9;
+	background: #cccccc;
 	color: #ffffff;
 	border: 0;
 	width: 20px;
@@ -61,12 +59,17 @@ li{
 	font-size: 25px;
 	cursor: pointer;
 	border-radius: 3px;
+	display: none;
+}
+.active .delete{
+	display: inline-block;
 }
 .bar{
 	width: 240px;
 }
 .btn{
 	vertical-align: top;
+	margin-top: 5px;
 }
 select{
 	border: none;
@@ -81,6 +84,10 @@ select:focus{
 .fromTime, .from{
 	width: 70px;
 }
+.from{
+	width: 77px;
+	border-right:1px dashed #c1c1c1;
+}
 .fromTime, .allTime{
 	border-right: 1px dashed #c1c1c1;
 }
@@ -89,7 +96,7 @@ select:focus{
 	border-right: 1px dashed #c1c1c1;
 }
 .comparsion {
-	width: 460px;
+	width: 455px;
 }
 .errorValue{
 	vertical-align: top;
@@ -103,15 +110,18 @@ select:focus{
 	border-left: 1px dashed #c1c1c1;
 }
 .row_add{
-	width: 990px;
-	background: #C6F6E4;
+	width: 988px;
+	background: #daeff6;
 	color: #c1c1c1;
+	border: 1px solid #efefef;
 }
 .table_body{
 	width: 990px;
 }
 .fa{
 	float: right;
+	margin-top: 2px;
+	margin-right: 2px;
 	vertical-align: middle;
 }
 .white{
@@ -143,6 +153,9 @@ select:focus{
 	outline: #c1c1c1;
 	margin: 0 5px;
 }
+.alertValue .bar{
+	margin: 0;
+}
 .editing select:focus, .editing input:focus{
 	background: #ffffff;
 }
@@ -165,7 +178,7 @@ select:focus{
 	width: 40px;
 	margin-left: 10px;
 	text-align: center;
-	background: #D766F9;
+	background: #602372;
 	border: none;
 	height: 25px;
 	position: relative;
@@ -176,7 +189,7 @@ select:focus{
 	border-radius: 3px;
 	display: none;
 }
-.editing .save{
+.active .save{
 	display: inline-block;
 }
 .colorbar{
@@ -194,7 +207,7 @@ select:focus{
 .timebar{
 	font-size: 0;
 	position: relative;
-	top: 50px;
+	top: 70px;
 	left: 15px;
 }
 .time{
@@ -247,7 +260,9 @@ select:focus{
 }
 .relative{
 	position: relative;
-	margin-left: 10px;
+	min-height: 100px;
+	width: 1100px;
+	margin: 0 auto 100px auto;
 }
 .header{
 	position: absolute;
@@ -255,5 +270,36 @@ select:focus{
 }
 .middle{
 	position: relative;
-	top: 50px;
+	top: 55px;
+}
+.middle div{
+	margin: 2px 0;
+}
+.outputBar{
+	width: 960px;
+	min-height: 50px;
+	left: 15px;
+	position: relative;
+	top: 80px;
+}
+.inputBar{
+	width: 1100px;
+	margin: auto;
+}
+.inputBar input{
+	border: 3px solid #efefef;
+	width: 300px;
+	height: 30px;
+	border-radius: 3px;
+}
+.inputBar button{
+	background: #9e156d;
+	border: 3px solid #9e156d;
+	color: #ffffff;
+	width: 80px;
+	height: 36px;
+	line-height: 30px;
+	text-align: center;
+	border-radius: 3px;
+	cursor: pointer;
 }

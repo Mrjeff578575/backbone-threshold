@@ -7,21 +7,47 @@ var newThreshold = function(options){
 	};
 	var colorArray = ['purple', 'lightblue', 'green', 'blue', 'magenta', 'brightgreen'];
 	var buffer = [];
+	var outputArray = [];
+	var input;
 	$(options.body).addClass('middle');
 	$(options.maincontainer).addClass('relative');
 	$(document).keydown(function(e){//按下esc退出编辑模式
 		if(e.keyCode == 27){
 			$('.view').removeClass('editing');
-			$('select').blur();
-			$('input').blur();
+			$('select:focus').blur();
+			$('input:focus').blur();
 		}
 	});
 	$(document).mousedown(function(e){//点击body退出编辑模式
 		if(e.target.localName == 'body'){
 			$('.view').removeClass('editing');
-			$('select').blur();
-			$('input').blur();
+			$('select:focus').blur();
+			$('input:focus').blur();
 		}
+	})
+	$('.Textadd').click(function(){
+		input = $('#thresInput').val();
+		if(input == ''){
+			alert('请输入之后再点击添加');
+			return;
+		}
+		$('#thresInput')[0].value = '';
+		var timeRegx = /^\(.*\)/;
+		var compareRegx = /[>=<]/;
+		if(!timeRegx.test(input)){
+			alert('时间输入格式不正确');
+			return;
+		}
+		if(!compareRegx.test(input)){
+			alert('操作符输入格式不正确');
+			return;
+		}
+		var fromTime = input.match(timeRegx)[0].replace(/[()]/gi, '').substr(0, 5);
+		var endTime = input.match(timeRegx)[0].replace(/[()]/gi, '').substr(6, 10);
+		var compare = input.match(compareRegx)[0];
+		var index = input.indexOf(compare);
+		var thres = input.substring(index+2);
+		console.log('fromTime:'+fromTime, 'endTime:'+endTime, 'compare:'+compare, 'thres:'+thres);
 	})
 	function NumCheck(num){//随机颜色check
 		if(buffer.indexOf(num) == -1){
@@ -51,7 +77,6 @@ var newThreshold = function(options){
 			time--;
 		}
 		_time = Math.floor(time * 100);
-		console.log('_time:'+ _time);
 		if(_time < 100){
 			switch(_time){//进行数据修正
 				case 0:
@@ -78,35 +103,114 @@ var newThreshold = function(options){
 	//循环加上颜色，并检测是否会覆盖 参数依次：this值，起始值，结束值
 	function LoopAddColor(that, from, end){
 		for(var i = from ; i < end ; i++){
-        	var _Self = that;
-        	colorArray.map(function(item){ //保证只显示先来的颜色
-        		if($('.color').eq(i).hasClass('expand')) return
-        		else{
-        			$('.color').eq(i).addClass(_Self.get('color'));
-        			$('.color').eq(i).addClass('expand');
-        		}
-        	})
+			var flag = CheckColor($('.color').eq(i));
+			if(flag){ //如果没颜色并且不是allday就添加颜色和expand
+				$('.color').eq(i).addClass(that.get('color'));
+				if(that.get('fromTime') !== 'all day'){
+					$('.color').eq(i).addClass('expand'); 
+				}
+			}
         }
+	};
+	function CheckColor(dom) {//传入dom元素，判断这个dom元素上面是否有除了灰色以外的其他颜色
+		var num = 0;//用来判断是否颜色判断完成
+		colorArray.map(function(item){
+			dom.hasClass(item) ? num = -1 : num += 1
+		})
+		return num == colorArray.length ? true : false
+	}
+	//传入Model。然后为颜色条附上相应的颜色
+	function AddColor(item){//model
+		var _this = item;
+		var timeArray = ChangeTime(_this.get('fromTime'), _this.get('endTime'));
+		var fromIndex = timeArray[0];
+		var endIndex = timeArray[1];
+		var index = endIndex - fromIndex;
+		if(index == 0){
+			LoopAddColor(_this, 0, 96);
+			try{ //必须是backboneView才有效
+				_this.$('.fromTime').addClass('allTime');
+				_this.$('.fromTime').removeClass('fromTime');
+				$('.allTime')[0].value = 'all day';	
+				_this.$('.endTime').addClass('hidden');
+				_this.model.attributes.fromTime == 'all day';
+			}
+			catch(e){
+				console.log(e);
+			}
+			return
+		}
+		if(index < 0){//判断是否跨天
+			var firstDayIndex = 96 - fromIndex;//eg:23:00 - 1:30 4
+			var secondDayIndex = endIndex;
+			LoopAddColor(_this, fromIndex, 97);
+	        LoopAddColor(_this, 0, secondDayIndex);
+		}
+		else{
+			LoopAddColor(_this, fromIndex, endIndex);
+		}
+	};
+	function OutPut(that, flag){//model,修改数据的时候需要移除当前model相关
+		var _self = that.attributes;
+		var output;
+		var index;
+		var id = that.id;
+		var isRepeat = false;
+		var separator = '';
+		if(_self.fromTime !== 'all day'){
+			output = '('+_self.fromTime+" "+ _self.endTime+')'+" " + _self.compareValue +" "+ _self.warnValue+" "+  _self.errorValue +" "+ _self.criticalValue;
+		}
+		else{
+			output = "("+_self.fromTime+")"+" "+ _self.compareValue +" "+ _self.warnValue+" "+  _self.errorValue +" "+ _self.criticalValue;
+		}
+		if(flag){//添加
+			//如果当前要保存的id已经存在就先删除掉当前id的output
+			outputArray.map(function(item){
+				if(item.id == id && item.output !== output){//id相同并且输出不同（正在编辑）
+					isRepeat = true;
+					item.output = output;
+				}
+				else if(item.id == id){//id相同输出相同(再次保存)
+					isRepeat = true;
+				}
+			})
+			if(!isRepeat){
+				outputArray.push({output:output, id: id});
+			}
+		}
+		else{
+			outputArray.map(function(item){
+				if(item.id == id){//找到需要删除的元素
+					index = outputArray.indexOf(item);
+					return;
+				}
+			})
+			outputArray.splice(index, 1);
+		}
+		$('.outputBar')[0].innerHTML = '';
+		if(outputArray.length > 1){
+			separator = ',';
+		}
+		outputArray.map(function(item){
+			$('.outputBar')[0].innerHTML +=  item.output +' '+separator+' ';
+		})
 	};
 	var Threshold = Backbone.Model.extend({
     	// 设置默认的属性
    		defaults: function(){
    			return {
    				color: Thresholds.ranColor(),
-	   			fromTime:'Any Time',
+	   			fromTime:'all day',
 	        	endTime:'00:00',
 	        	valueStatus:'value',
 	        	compareValue:'=',
 	        	warnValue:'',
 	        	errorValue:'',
 	        	criticalValue:'',
-	        	sortTime: ''
+	        	sortTime: '',
+	        	order:Thresholds.nextOrder()//加入order判断先来后到
    			};
    		}
-    	// 设置任务完成状态
-    	// toggle: function() {
-     //    	this.save({done: !this.get("done")});
-   		// }
 	});
 
 	var ThresholdList = Backbone.Collection.extend({
@@ -125,6 +229,10 @@ var newThreshold = function(options){
 	    	var Num = Math.floor(Math.random() * colorArray.length)
 	    	var num = NumCheck(Num);
 	    	return colorArray[num];
+	    },
+	    nextOrder: function() {
+	      if (!this.length) return 1;
+	      return this.last().get('order') + 1;
 	    },
 	    //Backbone内置属性，指明collection的排序规则。
 	    comparator: 'sortTime'
@@ -145,31 +253,32 @@ var newThreshold = function(options){
 
 	    // 为每一个任务条目绑定事件
 	    events: {
-	    	"dblclick .view"     : "edit",
-	    	"focus .allTime"     : "editing",
-	    	"focus .fromTime"	 : "editing",
-	    	"focus .endTime"	 : "editing",
-	    	"focus .valueStatus" : "editing",
-	    	"focus .compare"	 : "editing",
-	    	"focus .warnthres"    : "editing",
-	        "focus .errorthres"   : "editing",
+	    	"dblclick .view"       : "edit",
+	    	"focus .allTime"       : "editing",
+	    	"focus .fromTime"	   : "editing",
+	    	"focus .endTime"	   : "editing",
+	    	"focus .valueStatus"   : "editing",
+	    	"focus .compare"	   : "editing",
+	    	"focus .warnthres"     : "editing",
+	        "focus .errorthres"    : "editing",
 	        "focus .criticalthres" : "editing",
-	        "blur  .allTime"       :"editFromTime",
-	        "blur .fromTime"      : "editFromTime",
-	        "blur .endTime"      : "editEndTime",
-	        "blur .valueStatus"  : "editStatus",
-	        "blur .compare"      : "compare",
-	       	"blur .warnthres"    : "warnValue",
-	        "blur .errorthres"   : "errorValue",
+	        "blur .allTime"        : "editFromTime",
+	        "blur .fromTime"       : "editFromTime",
+	        "blur .endTime"        : "editEndTime",
+	        "blur .valueStatus"    : "editStatus",
+	        "blur .compare"        : "compare",
+	       	"blur .warnthres"      : "warnValue",
+	        "blur .errorthres"     : "errorValue",
 	        "blur .criticalthres"  : "criticalValue",
-	        "click .save"      : "close",
-	       	"click .delete" : "clear"
+	        "click .save"          : "close",
+	       	"click .delete"        : "clear"
 	    },
 
 	    //在初始化时设置对model的change事件的监听
 	    //设置对model的destroy的监听，保证页面数据和model数据一致
 	    initialize: function() {
 	        //这个remove是view的中的方法，用来清除页面中的dom
+	        // this.listenTo(this.model,'change:fromTime', this.render)
 	        this.listenTo(this.model, 'destroy', this.remove);
 	    },
 
@@ -183,7 +292,7 @@ var newThreshold = function(options){
 	    	else{
 	    		var value = this.$('.fromTime').val();
 	    	}
-	    	if(value !== 'Any Time'){
+	    	if(value !== 'all day'){
 	    		this.model.save({fromTime: value});
 	    		//sortTime用来当fromtime改变时进行排序的依据。
 	    		this.model.save({sortTime: value.replace(':','.')*100})
@@ -201,7 +310,7 @@ var newThreshold = function(options){
 	    	else{
 	    		var value = this.$('.fromTime').val();
 	    	}
-	    	if(value !== 'Any Time'){
+	    	if(value !== 'all day'){
 	    		this.model.save({fromTime: value});
 	    		//sortTime用来当fromtime改变时进行排序的依据。
 	    		this.model.save({sortTime: value.replace(':','.')*100})
@@ -209,6 +318,16 @@ var newThreshold = function(options){
 	    		this.$('.allTime').removeClass('allTime');
 	    		this.$('.endTime').removeClass('hidden');
 	    		this.$('.start')[0].value = value;
+	    	}
+	    	else{
+	    		if(this.$('.allTime').val() == undefined){
+	    			this.model.save({fromTime: value});
+		    		this.model.save({sortTime: 0 });//all day排在最前面
+		    		this.$('.fromTime').addClass('allTime');
+		    		this.$('.allTime').removeClass('fromTime');
+		    		this.$('.endTime').addClass('hidden');
+		    		this.$('.start')[0].value = value;
+	    		}
 	    	}
 	    },
 	    editEndTime: function(){
@@ -251,14 +370,15 @@ var newThreshold = function(options){
 	    	this.$('.warnbar').slideDown('slow');
 	        this.$('.errorbar').slideDown('slow');
 	        this.$('.criticalbar').slideDown('slow');
+
 	    },
 	    // 关闭编辑模式，并把修改内容同步到Model和界面
 	    close: function() {
 	    	var warnValue = this.$('.warnthres').val();
 	    	var errorvalue = this.$('.errorthres').val();
 	    	var criticalvalue = this.$('.criticalthres').val();
-	    	if($('.allTime').length > 1){ //警告any Time只能有一个
-	    		alert('Any Time only one');
+	    	if($('.allTime').length > 1){ //保存时检查,警告any Time只能有一个
+	    		alert('all day is only');
 	    		return
 	    	}
 	    	//判断是否隐藏error和critical
@@ -282,65 +402,48 @@ var newThreshold = function(options){
 	        	$('.color').removeClass(this.model.attributes.color);
 	        }
 	        //改变colorbar中的颜色显示,首先移除当前颜色，保证修改时颜色条变化。
-	        if(this.model.attributes.fromTime !== 'Any Time'){
+	        if(this.model.get('fromTime') !== 'all day' && this.model.get('fromTime') !== this.model.get('endTime')){
 	        	AddColor(this.model);
 	        }
-	        else{
+	        else if(this.model.get('fromTime') == 'all day'){
 	        	LoopAddColor(this.model, 0, 96);
 	        }
-	        //输出编辑后的字符串
-	        var _self = this.model.attributes;
-	        if(this.model.attributes.fromTime !== 'Any Time'){
-	        	console.log('('+_self.fromTime+" "+ _self.endTime+')'+" " + _self.compareValue +" "+ _self.warnValue+" "+  _self.errorValue +" "+ _self.criticalValue);
-	        }
 	        else{
-	        	console.log("()"+" "+ _self.compareValue +" "+ _self.warnValue+" "+  _self.errorValue +" "+ _self.criticalValue);
+	        	console.log(this);
+	        	LoopAddColor(this.model, 0, 96);
+	        	this.model.save({fromTime: 'all day'});
+	        	this.$('.fromTime').addClass('allTime');
+				this.$('.fromTime').removeClass('fromTime');
+				$('.allTime')[0].value = 'all day';	
+				this.$('.endTime').addClass('hidden');
+				this.model.attributes.fromTime == 'all day';
 	        }
+	        //输出编辑后的字符串,传入标志位(true表示添加,false表示删除)
+	        OutPut(this.model, true);
 	    },
 	    // 移除对应条目，以及对应的数据对象
 	    clear: function() {
 	        this.model.destroy();
-	        console.log($('.color').find(this.model.get('color')));
-	       	$('.color').siblings("."+this.model.get('color')).removeClass('expand');//expand没有移除导致bug
-	        $('.color').removeClass(this.model.attributes.color);
+	        OutPut(this.model, false);      
+	        var color = this.model.get('color');
+	        var index = colorArray.indexOf(color);//删除Buffer当前当前颜色索代表的数字
+	        index = buffer.indexOf(index);
+	        buffer.splice(index, 1);
+	       	$('.color').siblings("."+color).removeClass('expand');
+	        $('.color').removeClass(color);
 	        if(Thresholds.length == 0){
 	        	$('.color').removeClass('expand');
 	        }
-	        else{//删除完AnyTime后，所有颜色被移除，需要改变成再次给颜色条赋值
-	        	Thresholds.models.map(function(item){
+	        else{
+	        //删除完AnyTime后，所有颜色被移除，需要改变成再次给颜色条赋值
+	        //因为model已经重新排序而视图没有重新排序，fetch的时候，会出现先设置的颜色可能被后设置的颜色覆盖。
+	        //解决方案：1.关闭Model排序 2.将排序体现在视图上
+	        	Thresholds.models.map(function(item){ 
 	        		AddColor(item);
 	        	})
 	        }
 	    }
 	});
-	function AddColor(item){//model
-		var _this = item;
-		console.log(_this);
-		var timeArray = ChangeTime(_this.get('fromTime'), _this.get('endTime'));
-		var fromIndex = timeArray[0];
-		var endIndex = timeArray[1];
-		var index = endIndex - fromIndex;
-		if(index == 0){
-			LoopAddColor(_this, 0, 96);
-			_this.$('.fromTime').addClass('allTime');
-			_this.$('.fromTime').removeClass('fromTime');
-			console.log($('.allTime'));
-			$('.allTime')[0].value = 'Any Time';
-			_this.$('.endTime').addClass('hidden');
-			_this.model.attributes.fromTime == 'Any Time';
-			return
-		}
-		console.log('fromIndex：'+fromIndex,'endIndex：'+endIndex);
-		if(index < 0){//判断是否跨天
-			var firstDayIndex = 96 - fromIndex;//eg:23:00 - 1:30 4
-			var secondDayIndex = endIndex;
-			LoopAddColor(_this, fromIndex, 97);
-	        LoopAddColor(_this, 0, secondDayIndex);
-		}
-		else{
-			LoopAddColor(_this, fromIndex, endIndex);
-		}
-	}
 	//以及任务的添加。主要是整体上的一个控制
 	var AppView = Backbone.View.extend({
 
@@ -367,9 +470,26 @@ var newThreshold = function(options){
 	        this.footer = $(option.timebar);
 	       	this.footer.html(this.statsTemplate());
 			Thresholds.fetch({  
-			    success: function(collection, resp) {  
-			        // 同步成功后在控制台输出集合中的模型列表  
-			        console.log(collection.models);  
+			    success: function(collection, resp) {
+			    	buffer = [];//避免再次调用ranColor产生随机数干扰  
+			    	var length = 0;
+			    	if($('.allTime').length > 1){ //保存时检查,警告any Time只能有一个
+				    	alert('all day only one');
+				    	return;
+				    }
+			        // 同步成功后渲染颜色,并输出值
+			        collection.models.map(function(item){
+			        	var index = colorArray.indexOf(item.get('color'));
+			        	if(item.get('fromTime') == item.get('endTime')){
+			        		item.save({fromTime: 'all day'});
+			        	}
+			        	buffer.push(index);
+			        	if(buffer.length == 6){
+			        		buffer = [];
+			        	} 
+			        	AddColor(item);
+			        	OutPut(item, true); 
+			        })
 			    }  
 			}); 
 	    },

@@ -8,14 +8,16 @@
 </head>
 <body>
 	<div class="container" id="Threshold-App">
-		<div class="table_body" id="table_body">
-			
-			
-		</div>
-
+		<div class="table_body" id="table_body"></div>
 		 <footer>
 	      <div id="Threshold-count"></div>
 	    </footer>
+	    <div class="outputBar"></div>
+	</div>
+	<div class="inputBar">
+		<label>请输入阈值：</label>
+		<input type="text" placeholder="例如: (01:00 02:00) > 6 10 12" id="thresInput">
+		<button class="Textadd">添加</button>
 	</div>
 
 	<!-- Templates -->
@@ -40,6 +42,7 @@
 								<% }; %>
 							<% };%>
 					<% }; %>
+					<option>all day</option>
 				</select>
 				<select class="endTime hidden">
 					<option><%= endTime %></option>
