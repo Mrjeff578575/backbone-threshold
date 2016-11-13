@@ -39,4 +39,21 @@
 		div#threshold_bar
 	input#thresInput
 	button.Textadd
-然后就可以愉悦的使用啦
+
+#### 界面预览
+![image](https://github.com/Mrjeff578575/markdownphoto/blob/master/Threshold.jpg)
+	
+#### 显示内容说明
+- From列支持选择all day选项,当From和Until列值相同时，则自动转变为all day,一个页面只支持一个all day,具有allday的那一行的From会跨度为两列宽,Until列消失
+- Comparsion支持操作符选择，提供三种操作符**>, <, =**
+- Alerts列也提供三种报警值的输入，如果缺省则只显示warning,如果不是缺省则只显示有具体输入内容的报警值。
+
+#### 输出内容结构说明
+1. 时间：**(<hh:mm> <hh：mm>)** 或空字符串， 空字符串表⽰示时间段为全天
+2. 操作符：只支持 **>, <, =**
+3. 报警值：依次为**warning,error,critical**，以空格分割，如果某一项缺省，后面的自动往前进，具体还是要看图表
+
+#### 输入内容说明
+1. 时间只支持 **(<hh:mm> <hh：mm>)** 或**空字符串**，并且分钟只能准确的显示00 15 30 45这种类型的，如果不是这几种类型，会自动转变位置最近的那一个。
+2. 操作符只支持 **>, <, =**
+3. 报警值只支持三个，需要以空格进行分割，第一个自动被识别为warning，依次类推。报警值只支持数字
