@@ -76,7 +76,7 @@ select{
 	border-bottom: 1px dashed #c1c1c1;
 }
 .allTime{
-	width: 146px;
+	width: 140px;
 }
 select:focus{
 	background: #ffffff;
@@ -85,14 +85,14 @@ select:focus{
 	width: 70px;
 }
 .from{
-	width: 77px;
+	width: 74px;
 	border-right:1px dashed #c1c1c1;
 }
 .fromTime, .allTime{
 	border-right: 1px dashed #c1c1c1;
 }
 .endTime, .until{
-	width: 70px;
+	width: 64px;
 	border-right: 1px dashed #c1c1c1;
 }
 .comparsion {
@@ -124,6 +124,10 @@ select:focus{
 	margin-right: 2px;
 	vertical-align: middle;
 }
+.fa-close{
+	margin: 0;
+	box-shadow: 0 2px 2px #000000;
+}
 .white{
 	display: inline-block;
 	color: #ffffff;
@@ -141,7 +145,7 @@ select:focus{
 	background: #ffcc00;
 }
 .error{
-	background: #f7ad95;
+	background: #f26522;
 }
 .critical{
 	background: #ed1e24;
@@ -182,7 +186,7 @@ select:focus{
 	border: none;
 	height: 25px;
 	position: relative;
-	bottom: 7px;
+	bottom: 6px;
 	color: #ffffff;
 	font-size: 16px;
 	line-height: 25px;
@@ -302,4 +306,7 @@ select:focus{
 	text-align: center;
 	border-radius: 3px;
 	cursor: pointer;
+}
+.table_header .cell{
+	padding-left: 3px;
 }

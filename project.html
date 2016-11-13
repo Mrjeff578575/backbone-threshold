@@ -44,8 +44,8 @@
 					<% }; %>
 					<option>all day</option>
 				</select>
-				<select class="endTime hidden">
-					<option><%= endTime %></option>
+				<select class="endTime hidden">	
+					<option><%= endTime %></option>				
 					<% for (var i = 0; i < 24; i++){%>
 						<% for(var j = 0; j <=45 ; j = j + 15){%>
 								<% if(i < 10 && j !== 0){ %>
@@ -77,6 +77,15 @@
 			</li>
 			<li class="compareValue cell">
 				<select class="compare">
+					<% if(compareValue == '='){ %>
+						<option value="<">is equal to (=)</option>
+					<% }; %>
+					<% if(compareValue == '>'){ %>
+						<option value="<">is greater than (>)</option>
+					<% }; %>
+					<% if(compareValue == '<'){ %>
+						<option value="<">is less than (<)</option>
+					<% }; %>
 					<option value="=">is equal to (=)</option>
 					<option value=">">is greater than (>)</option>
 					<option value="<">is less than (<)</option>

@@ -8,12 +8,13 @@ var newThreshold = function(options){
 	var colorArray = ['purple', 'lightblue', 'green', 'blue', 'magenta', 'brightgreen'];
 	var buffer = [];
 	var outputArray = [];
-	var input;
+	var numRegx = /^\d+$/;
 	$(options.body).addClass('middle');
 	$(options.maincontainer).addClass('relative');
 	$(document).keydown(function(e){//按下esc退出编辑模式
 		if(e.keyCode == 27){
 			$('.view').removeClass('editing');
+			$('.view').removeClass('active');
 			$('select:focus').blur();
 			$('input:focus').blur();
 		}
@@ -21,11 +22,14 @@ var newThreshold = function(options){
 	$(document).mousedown(function(e){//点击body退出编辑模式
 		if(e.target.localName == 'body'){
 			$('.view').removeClass('editing');
+			$('.view').removeClass('active');
 			$('select:focus').blur();
 			$('input:focus').blur();
 		}
 	})
+	//获取输入框信息，并转换
 	$('.Textadd').click(function(){
+		var input;
 		input = $('#thresInput').val();
 		if(input == ''){
 			alert('请输入之后再点击添加');
@@ -38,6 +42,10 @@ var newThreshold = function(options){
 			alert('时间输入格式不正确');
 			return;
 		}
+		if(input.match(timeRegx)[0].replace(/[()]/gi, '') !== '' && input.match(timeRegx)[0].replace(/[()]/gi, '').length <= 10){
+			alert('时间输入格式不正确');
+			return;			
+		}
 		if(!compareRegx.test(input)){
 			alert('操作符输入格式不正确');
 			return;
@@ -47,8 +55,40 @@ var newThreshold = function(options){
 		var compare = input.match(compareRegx)[0];
 		var index = input.indexOf(compare);
 		var thres = input.substring(index+2);
-		console.log('fromTime:'+fromTime, 'endTime:'+endTime, 'compare:'+compare, 'thres:'+thres);
-	})
+		if(!numRegx.test(thres.replace(/ /gi,'')) && thres !== ''){
+	    	alert('阈值必须是数字');
+	    	return;
+	    };
+		//添加之后必须点save才能保存
+		if(fromTime == endTime || fromTime == ''){
+			fromTime = 'all day';
+			endTime = '';
+		}
+		var result = [];
+		sub(0, thres, result);
+		Thresholds.create({
+				fromTime:fromTime,
+	        	endTime:endTime,
+	        	compareValue:compare,
+	        	warnValue:result[0] || '',
+	        	errorValue:result[1] || '',
+	        	criticalValue:result[2] || ''
+		});
+		console.log('warn:'+result[0],'error:'+result[1], 'critical:'+result[2]);
+	});
+	function sub(index, str, result){ //11 22 => 11 => 11 22 => 22
+		if(result.length >= 3) return result;
+		var string = str.slice(index);
+		var blankIndex = string.indexOf(' ');
+		if(blankIndex == -1){
+			result.push(string);
+			return;
+		}
+		else{
+			result.push(string.substr(0, blankIndex));
+		}
+		sub(blankIndex+1, string, result);
+	}
 	function NumCheck(num){//随机颜色check
 		if(buffer.indexOf(num) == -1){
     		buffer.push(num);
@@ -106,13 +146,14 @@ var newThreshold = function(options){
 			var flag = CheckColor($('.color').eq(i));
 			if(flag){ //如果没颜色并且不是allday就添加颜色和expand
 				$('.color').eq(i).addClass(that.get('color'));
-				if(that.get('fromTime') !== 'all day'){
+				if(that.get('fromTime') !== 'all day' && that.get('fromTime') !== that.get('endTime')){
 					$('.color').eq(i).addClass('expand'); 
 				}
 			}
         }
 	};
-	function CheckColor(dom) {//传入dom元素，判断这个dom元素上面是否有除了灰色以外的其他颜色
+	//传入dom元素，判断这个dom元素上面是否有除了灰色以外的其他颜色
+	function CheckColor(dom) {
 		var num = 0;//用来判断是否颜色判断完成
 		colorArray.map(function(item){
 			dom.hasClass(item) ? num = -1 : num += 1
@@ -128,16 +169,16 @@ var newThreshold = function(options){
 		var index = endIndex - fromIndex;
 		if(index == 0){
 			LoopAddColor(_this, 0, 96);
-			try{ //必须是backboneView才有效
-				_this.$('.fromTime').addClass('allTime');
-				_this.$('.fromTime').removeClass('fromTime');
-				$('.allTime')[0].value = 'all day';	
-				_this.$('.endTime').addClass('hidden');
-				_this.model.attributes.fromTime == 'all day';
-			}
-			catch(e){
-				console.log(e);
-			}
+			// try{ //必须是backboneView才有效
+			// 	_this.$('.fromTime').addClass('allTime');
+			// 	_this.$('.fromTime').removeClass('fromTime');
+			// 	$('.allTime')[0].value = 'all day';	
+			// 	_this.$('.endTime').addClass('hidden');
+			// 	_this.model.attributes.fromTime == 'all day';
+			// }
+			// catch(e){
+			// 	console.log(e);
+			// }
 			return
 		}
 		if(index < 0){//判断是否跨天
@@ -344,14 +385,26 @@ var newThreshold = function(options){
 	    },
 	    warnValue: function(){
 	    	var value = this.$('.warnthres').val();
+	    	if(!numRegx.test(value) && value !== ''){
+	    		alert('输入数值必须是数字');
+	    		return;
+	    	};
 	    	this.model.save({warnValue: value});
 	    },
 	   	errorValue: function(){
 	    	var value = this.$('.errorthres').val();
+	    	if(!numRegx.test(value) && value !== ''){
+	    		alert('输入数值必须是数字');
+	    		return;
+	    	};
 	    	this.model.save({errorValue: value});
 	    },
 	    criticalValue: function(){
 	    	var value = this.$('.criticalthres').val();
+	    	if(!numRegx.test(value) && value !== ''){
+	    		alert('输入数值必须是数字');
+	    		return;
+	    	};
 	    	this.model.save({criticalValue: value});
 	    },
 	    // 修改任务条目的样式
@@ -396,18 +449,19 @@ var newThreshold = function(options){
 	    	}
 	        this.$('.view').removeClass("editing");
 	        this.$('.view').removeClass("active");
+	        //这里会移除相同颜色
 	        //当前Model数量小于颜色数组数量，当前首先移除expand和color
-	        if(Thresholds.models.length <= colorArray.length){
-	        	$('.color').siblings("."+this.model.get('color')).removeClass('expand');
-	        	$('.color').removeClass(this.model.attributes.color);
-	        }
-	        //改变colorbar中的颜色显示,首先移除当前颜色，保证修改时颜色条变化。
+        	$('.color').siblings("."+this.model.get('color')).removeClass('expand');
+        	$('.color').removeClass(this.model.attributes.color);
+        	//不等于all day且开始和结束时间不同
 	        if(this.model.get('fromTime') !== 'all day' && this.model.get('fromTime') !== this.model.get('endTime')){
 	        	AddColor(this.model);
 	        }
+	        //等于all day
 	        else if(this.model.get('fromTime') == 'all day'){
 	        	LoopAddColor(this.model, 0, 96);
 	        }
+	        //不等于all day 并且开始和结束相同，判定为all day
 	        else{
 	        	console.log(this);
 	        	LoopAddColor(this.model, 0, 96);
@@ -418,6 +472,13 @@ var newThreshold = function(options){
 				this.$('.endTime').addClass('hidden');
 				this.model.attributes.fromTime == 'all day';
 	        }
+	        //再次渲染相同颜色的model，保证移除的时候不移除相同
+	        var _this = this;
+	        Thresholds.models.map(function(item){
+	        	if(item.get('color') == _this.model.get('color')){
+	        		AddColor(item);
+	        	}
+	        })
 	        //输出编辑后的字符串,传入标志位(true表示添加,false表示删除)
 	        OutPut(this.model, true);
 	    },
@@ -486,9 +547,13 @@ var newThreshold = function(options){
 			        	buffer.push(index);
 			        	if(buffer.length == 6){
 			        		buffer = [];
-			        	} 
+			        	}
+			        	OutPut(item, true);  
+			        	//如果是all day则不进行常规的添加颜色
+			        	if(item.get('fromTime') == 'all day'){
+			        		LoopAddColor(item, 0, 96);
+			        	}
 			        	AddColor(item);
-			        	OutPut(item, true); 
 			        })
 			    }  
 			}); 
