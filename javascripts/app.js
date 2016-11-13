@@ -1,16 +1,17 @@
 var newThreshold = function(options){
-	option = {
+	var option = {
 		maincontainer: options.maincontainer || '#app',
-		add: options.add  || '#newThreshold',
 		body:options.body || '#table_body',
-		timebar:options.timebar || 'footer'
+		timebar:options.timebar || 'footer',
+		input: options.input || '#thresInput',
+		add: options.add || '.Textadd'
 	};
 	var colorArray = ['purple', 'lightblue', 'green', 'blue', 'magenta', 'brightgreen'];
 	var buffer = [];
 	var outputArray = [];
 	var numRegx = /^\d+$/;
-	$(options.body).addClass('middle');
-	$(options.maincontainer).addClass('relative');
+	$(option.body).addClass('middle');
+	$(option.maincontainer).addClass('relative');
 	$(document).keydown(function(e){//按下esc退出编辑模式
 		if(e.keyCode == 27){
 			$('.view').removeClass('editing');
@@ -28,16 +29,17 @@ var newThreshold = function(options){
 		}
 	})
 	//获取输入框信息，并转换
-	$('.Textadd').click(function(){
+	$(option.add).click(function(){
 		var input;
-		input = $('#thresInput').val();
+		input = $(option.input).val();
 		if(input == ''){
 			alert('请输入之后再点击添加');
 			return;
 		}
-		$('#thresInput')[0].value = '';
+		$(option.input)[0].value = '';
 		var timeRegx = /^\(.*\)/;
 		var compareRegx = /[>=<]/;
+		var time_Regx = /\d{2}:\d{2}/;
 		if(!timeRegx.test(input)){
 			alert('时间输入格式不正确');
 			return;
@@ -50,8 +52,12 @@ var newThreshold = function(options){
 			alert('操作符输入格式不正确');
 			return;
 		}
+		//当前只能准确处理00 15 30 45这种时间，其余的只能近似处理
 		var fromTime = input.match(timeRegx)[0].replace(/[()]/gi, '').substr(0, 5);
 		var endTime = input.match(timeRegx)[0].replace(/[()]/gi, '').substr(6, 10);
+		if(!time_Regx.test(fromTime) || !time_Regx.test(endTime)){
+			alert('开始或结束时间输入不正确');
+		}
 		var compare = input.match(compareRegx)[0];
 		var index = input.indexOf(compare);
 		var thres = input.substring(index+2);
@@ -74,8 +80,8 @@ var newThreshold = function(options){
 	        	errorValue:result[1] || '',
 	        	criticalValue:result[2] || ''
 		});
-		console.log('warn:'+result[0],'error:'+result[1], 'critical:'+result[2]);
 	});
+	//讲thres部分剥离并推入结果数组
 	function sub(index, str, result){ //11 22 => 11 => 11 22 => 22
 		if(result.length >= 3) return result;
 		var string = str.slice(index);

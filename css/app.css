@@ -285,6 +285,9 @@ select:focus{
 	left: 15px;
 	position: relative;
 	top: 80px;
+	border: 1px solid #efefef;
+	padding: 4px;
+	box-sizing: content-box;
 }
 .inputBar{
 	width: 1100px;
